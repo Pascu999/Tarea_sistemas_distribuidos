@@ -1,0 +1,79 @@
+version: "3" 
+
+
+
+services:
+
+
+  db:
+    image: 'postgres:13.1-alpine'
+    container_name: db
+    environment:
+      - POSTGRES_USER=compose-postgres
+      - POSTGRES_PASSWORD=compose-postgres
+    volumes:
+      - ./dbdata:/var/lib/postgresql/data
+    networks:
+      network1:
+        aliases:
+          - network1
+
+  app:
+    image: 'docker-spring-boot-postgres:latest'
+    build:
+      context: .
+      dockerfile: dockerfile
+    container_name: app
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/compose-postgres
+      - SPRING_DATASOURCE_USERNAME=compose-postgres
+      - SPRING_DATASOURCE_PASSWORD=compose-postgres
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SERVER_PORT=8090
+      - spring_jacksoN_date_format=dd/MM/yyyy
+    ports:
+      - 8090:8090
+    networks:
+      network1:
+        aliases:
+          - network1
+      network2:
+        aliases:
+          - network2
+
+
+
+
+
+
+
+
+
+  ubuntu:
+    container_name: ubuntu
+    build:
+      context: .
+      dockerfile: dockerfile
+    image: ubuntu
+    command: ["sleep","infinity"]
+    networks:
+      network2:
+        aliases:
+          - network2
+    
+
+networks:
+  network1:
+    name: network1
+    driver: bridge
+    ipam:
+      driver: default
+  network2:
+    name: network2
+    driver: bridge
+    ipam:
+      driver: default
+
+
